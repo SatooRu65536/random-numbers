@@ -11,7 +11,8 @@ export default function Home() {
 
   const next = () => {
     const diff = range.max - range.min + 1;
-    const numsList = [...Array(diff)].map((_, i) => i + range.min);
+    const numsList = [...Array(diff)].map((_, i) => {return Number(i) + Number(range.min)});
+    console.log(numsList);
     const noneSelectedList = numsList.filter(i => selectedNums.indexOf(i) == -1);
     if (noneSelectedList.length > 0) {
       const selectNum = noneSelectedList[Math.floor(Math.random() * noneSelectedList.length)];

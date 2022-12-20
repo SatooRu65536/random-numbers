@@ -8,10 +8,15 @@ export default function Home() {
   const [selectedNums, setSelectedNums] = useState([] as (number | 'Fin')[]);
   const [range, setRange] = useState({ min: 1, max: 40 });
   const [openDialog, setOpenDialog] = useState(false);
+  const [indicateModeNum, setIndicateMode] = useState(0);
+  const indicateModes = ['順次', '一覧'];
+
+  const getNumList = (): number[] => {
+    return [...Array(range.max - range.min + 1)].map((_, i) => { return Number(i) + Number(range.min) });
+  }
 
   const next = () => {
-    const diff = range.max - range.min + 1;
-    const numsList = [...Array(diff)].map((_, i) => {return Number(i) + Number(range.min)});
+    const numsList = getNumList();
     console.log(numsList);
     const noneSelectedList = numsList.filter(i => selectedNums.indexOf(i) == -1);
     if (noneSelectedList.length > 0) {
@@ -20,7 +25,7 @@ export default function Home() {
       setSelectedNums([...selectedNums, selectNum]);
     } else {
       setSelectNum('Fin');
-      if (selectedNums[selectedNums.length-1] !== 'Fin') {
+      if (selectedNums[selectedNums.length - 1] !== 'Fin') {
         setSelectedNums([...selectedNums, 'Fin']);
       }
     }
@@ -51,6 +56,10 @@ export default function Home() {
     setSelectedNums([]);
   }
 
+  const switchIndicateMode = () => {
+    setIndicateMode((indicateModeNum + 1) % indicateModes.length);
+  }
+
   return (
     <>
       <Head>
@@ -67,9 +76,9 @@ export default function Home() {
       <div className={`${styles.dialog_surface} ${openDialog && styles.active}`}>
         <div className={styles.dialog}>
           <div className={styles.setting}>
-            <div className={styles.mode_container}>
-              <span>モード</span>
-              <span className={styles.mode}>順次表示</span>
+            <div className={styles.mode_container} onClick={switchIndicateMode}>
+              <span>表示モード</span>
+              <span className={styles.mode}>{indicateModes[indicateModeNum]}</span>
             </div>
 
             <div className={styles.container}>
@@ -91,8 +100,13 @@ export default function Home() {
         </div>
 
         <div className={styles.selected_list}>
-          {selectedNums.map((num, i) => {
+          {indicateModeNum == 0 && selectedNums.map((num, i) => {
             return i < selectedNums.length - 1
+              ? <span key={i} className={styles.selected_num}>{num}</span>
+              : <span key={i} className={`${styles.selected_num} ${styles.active}`}>{num}</span>
+          })}
+          {indicateModeNum == 1 && getNumList().map((num, i) => {
+            return selectedNums.indexOf(num) == - 1
               ? <span key={i} className={styles.selected_num}>{num}</span>
               : <span key={i} className={`${styles.selected_num} ${styles.active}`}>{num}</span>
           })}

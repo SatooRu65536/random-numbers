@@ -9,6 +9,7 @@ export default function Home() {
   const [range, setRange] = useState({ min: 1, max: 40 });
   const [openDialog, setOpenDialog] = useState(false);
   const [indicateModeNum, setIndicateMode] = useState(0);
+  const [errorMessage, setErrorMessage] = useState(' ');
   const indicateModes = ['順次', '一覧'];
 
   const getNumList = (): number[] => {
@@ -39,16 +40,15 @@ export default function Home() {
     setRange({ min: range.min, max: e.target.value });
   }
 
-  const blurRange = () => {
-    if (range.min > range.max) {
-      setRange({ min: range.max, max: range.min });
-    } else if (range.min == range.max) {
-      setRange({ min: range.min, max: range.min + 1 });
-    }
-  }
-
   const switchOpenDialog = () => {
-    setOpenDialog(!openDialog);
+    if (openDialog && range.min > range.max) {
+      setErrorMessage('最小値と最大値が逆です');
+    } else if (openDialog && range.min == range.max) {
+      setErrorMessage('最小値と最大値が同じです');
+    } else {
+      setErrorMessage(' ');
+      setOpenDialog(!openDialog);
+    }
   }
 
   const reset = () => {
@@ -82,14 +82,16 @@ export default function Home() {
             </div>
 
             <div className={styles.container}>
-              <input type="number" id="min" value={range.min} onChange={changeMin} onBlur={blurRange} />
+              <input type="number" id="min" value={range.min} onChange={changeMin} />
               <span className={styles.range}>~</span>
-              <input type="number" id="max" value={range.max} onChange={changeMax} onBlur={blurRange} />
+              <input type="number" id="max" value={range.max} onChange={changeMax} />
             </div>
 
             <div className={styles.reset} onClick={() => reset()}>
               RESET
             </div>
+
+            <p className={styles.error_message}>{errorMessage}</p>
           </div>
         </div>
       </div>

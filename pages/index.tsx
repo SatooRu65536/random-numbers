@@ -1,24 +1,31 @@
 import Head from 'next/head';
 import styles from '../styles/Home.module.scss';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { useState } from 'react';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import React, { useState } from 'react';
 
 export default function Home() {
   const [selectNum, setSelectNum] = useState<'?' | 'Fin' | number>('?');
   const [selectedNums, setSelectedNums] = useState([] as (number | 'Fin')[]);
   const [range, setRange] = useState({ min: 1, max: 40 });
   const [openDialog, setOpenDialog] = useState(false);
+  const [displaySettings, setDisplaySettings] = useState(true);
   const [indicateModeNum, setIndicateMode] = useState(0);
-  const [errorMessage, setErrorMessage] = useState(' ');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [hiddenNumsStr, setHiddenNumsStr] = useState('');
+  const [hiddenNums, setHiddenNums] = useState([] as number[]);
   const indicateModes = ['順次', '一覧'];
 
   const getNumList = (): number[] => {
-    return [...Array(range.max - range.min + 1)].map((_, i) => { return Number(i) + Number(range.min) });
+    const nums = [...Array(range.max - range.min + 1)].map((_, i) => { return Number(i) + Number(range.min) });
+    const ret = nums.filter((num, i) =>
+      hiddenNums.indexOf(num) == -1
+    );
+    return ret;
   }
 
   const next = () => {
     const numsList = getNumList();
-    console.log(numsList);
     const noneSelectedList = numsList.filter(i => selectedNums.indexOf(i) == -1);
     if (noneSelectedList.length > 0) {
       const selectNum = noneSelectedList[Math.floor(Math.random() * noneSelectedList.length)];
@@ -40,13 +47,62 @@ export default function Home() {
     setRange({ min: range.min, max: e.target.value });
   }
 
+  const changeHiddenInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let formatStr = e.target.value.replace(/[^0-9|,|、|.|ー|~|〜|-]/g, ",");
+    formatStr = formatStr.replace(/[、|.]/g, ',');
+    formatStr = formatStr.replace(/[ー|〜|-]/g, '~');
+    formatStr = formatStr.replace(/,+/g, ',');
+    formatStr = formatStr.replace(/~+/g, '~');
+    formatStr = formatStr.replace(/^[,|~]/g, '');
+    setHiddenNumsStr(formatStr);
+  }
+
+  const blurHiddenInput = () => {
+    const formatStrSplit = hiddenNumsStr.split(',');
+    const hiddenList: number[] = [];
+    for (let i = 0; i < formatStrSplit.length; i++) {
+      const str = formatStrSplit[i];
+
+      if (str.match('~')) {
+        console.log(str);
+        const range = str.split('~');
+        if (range.length != 2 || Number(range[0]) >= Number(range[1])) {
+          setErrorMessage('範囲が正しくありません');
+          console.log('error',errorMessage);
+          return;
+        }
+        for (let n = Number(range[0]); n <= Number(range[1]); n++) {
+          hiddenList.push(n);
+        }
+      } else {
+        const n = Number(str);
+        if (typeof (n) !== 'number') {
+          setErrorMessage('なにかがおかしいです');
+          console.log('error',errorMessage);
+          return;
+        }
+        hiddenList.push(n);
+      }
+    }
+    setErrorMessage('');
+    const numList = [...Array(range.max - range.min + 1)].map((_, i) => { return Number(i) + Number(range.min) });
+    const hiddenListSnap = hiddenList.filter((num, i) =>
+      numList.indexOf(num) != -1 && hiddenList.indexOf(num) == i);
+    setHiddenNums(hiddenListSnap.sort((a, b) => { return a - b }));
+  }
+
+  const removeHiddenNums = () => {
+    setHiddenNums([]);
+    setHiddenNumsStr('');
+  }
+
   const switchOpenDialog = () => {
     if (openDialog && range.min > range.max) {
       setErrorMessage('最小値と最大値が逆です');
     } else if (openDialog && range.min == range.max) {
       setErrorMessage('最小値と最大値が同じです');
     } else {
-      setErrorMessage(' ');
+      setErrorMessage('');
       setOpenDialog(!openDialog);
     }
   }
@@ -74,7 +130,7 @@ export default function Home() {
       </div>
 
       <div className={`${styles.dialog_surface} ${openDialog && styles.active}`}>
-        <div className={styles.dialog}>
+        <div className={`${styles.dialog} ${displaySettings && styles.active}`}>
           <div className={styles.setting}>
             <div className={styles.mode_container} onClick={switchIndicateMode}>
               <span>表示モード</span>
@@ -85,6 +141,10 @@ export default function Home() {
               <input type="number" id="min" value={range.min} onChange={changeMin} />
               <span className={styles.range}>~</span>
               <input type="number" id="max" value={range.max} onChange={changeMax} />
+              <span
+                className={styles.to_hidden}
+                onClick={() => { setDisplaySettings(false) }}
+              >除外</span>
             </div>
 
             <div className={styles.reset} onClick={() => reset()}>
@@ -92,6 +152,33 @@ export default function Home() {
             </div>
 
             <p className={styles.error_message}>{errorMessage}</p>
+          </div>
+        </div>
+
+        <div className={`${styles.dialog} ${!displaySettings && styles.active}`}>
+          <div className={styles.hidden_container}>
+            <p className={styles.arrow_back_container} onClick={() => { setDisplaySettings(true) }}>
+              <ArrowBackIcon className={styles.arrow_back} />
+            </p>
+            <h2>除外リスト</h2>
+
+            <div className={styles.input_hidden}>
+              <input
+                type="text"
+                value={hiddenNumsStr}
+                onChange={changeHiddenInput}
+                onBlur={() => { blurHiddenInput() }}
+              />
+              <span onClick={() => { removeHiddenNums() }}>全削</span>
+            </div>
+
+            <p className={styles.error_message}>{errorMessage}</p>
+
+            <div className={styles.hidden_list}>
+              {hiddenNums.map((num, i) => {
+                return <span key={i} className={styles.hidden_num}>{num}</span>
+              })}
+            </div>
           </div>
         </div>
       </div>

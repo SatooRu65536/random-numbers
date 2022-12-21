@@ -46,6 +46,12 @@
     width: 600px;
     height: 320px;
     background-color: var(--color-on-primary);
+    display: none;
+    position: relative;
+
+    &.active {
+      display: block;
+    }
 
     .setting {
       height: 300px;
@@ -55,7 +61,6 @@
       background-color: var(--color-background-light);
 
       .mode_container {
-        margin-bottom: 10px;
         font-size: 25px;
         color: var(--color-on-primary);
 
@@ -68,6 +73,7 @@
 
       .container {
         height: 50px;
+        margin-top: 20px;
 
         input {
           height: 50px;
@@ -88,17 +94,26 @@
         }
 
         .range {
-          margin: 0 20px;
+          margin: 0 15px;
           font-size: 50px;
           line-height: 50px;
-          vertical-align: sub;
+          vertical-align: top;
           color: var(--color-on-primary);
+        }
+
+        .to_hidden {
+          margin: 5px 0 5px 40px;
+          padding: 5px 10px;
+          font-size: 23px;
+          border-radius: 10px;
+          background-color: var(--color-on-primary);
+          cursor: pointer;
         }
       }
 
       .reset {
         font-size: 25px;
-        margin: 50px auto 20px auto;
+        margin: 40px auto 20px auto;
         padding: 10px 20px;
         border-radius: 10px;
         color: var(--color-on-primary);
@@ -107,12 +122,87 @@
         box-shadow: 0 0 4px var(--color-on-primary);
         cursor: pointer;
       }
-      
+
       .error_message {
         margin-bottom: 10px;
         font-size: 20px;
         font-weight: 600;
         color: var(--color-on-primary);
+      }
+    }
+
+    .hidden_container {
+      height: 300px;
+      margin: 10px;
+      padding: 30px;
+      text-align: center;
+      background-color: var(--color-background-light);
+
+      .arrow_back_container {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        color: var(--color-on-primary);
+
+        .arrow_back {
+          font-size: 40px;
+          vertical-align: text-bottom;
+        }
+      }
+
+      h2 {
+        font-size: 25px;
+        color: var(--color-on-primary);
+      }
+
+      .input_hidden {
+        input {
+          height: 50px;
+          width: calc(80% - 50px);
+          margin-left: 5px;
+          font-size: 30px;
+          color: var(--color-text);
+          text-align: center;
+          position: relative;
+        }
+
+        span {
+          font-size: 25px;
+          padding: 5px 20px;
+          margin: 0 0 0 10px;
+          border-radius: 10px;
+          color: var(--color-on-primary);
+          background-color: var(--color-primary);
+          display: inline-block;
+          box-shadow: 0 0 4px var(--color-on-primary);
+          cursor: pointer;
+        }
+      }
+
+      .error_message {
+        margin-bottom: 10px;
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--color-on-primary);
+      }
+
+      .hidden_list {
+        height: 140px;
+        overflow-y: scroll;
+
+        .hidden_num {
+          width: 50px;
+          height: 50px;
+          margin: 10px;
+          font-size: 2rem;
+          line-height: 50px;
+          text-align: center;
+          display: inline-block;
+          font-weight: bold;
+          color: var(--color-on-primary);
+          background-color: var(--color-secoundary);
+          border-radius: 5px;
+        }
       }
     }
   }

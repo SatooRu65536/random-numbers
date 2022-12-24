@@ -2,12 +2,13 @@ import Head from 'next/head';
 import styles from '../styles/Home.module.scss';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 export default function Home() {
   const [selectNum, setSelectNum] = useState<'?' | 'Fin' | number>('?');
   const [selectedNums, setSelectedNums] = useState([] as (number | 'Fin')[]);
   const [range, setRange] = useState({ min: 1, max: 40 });
+  const [rangeSnap, setRangeSnap] = useState({ min: 1, max: 40 });
   const [openDialog, setOpenDialog] = useState(false);
   const [displaySettings, setDisplaySettings] = useState(true);
   const [indicateModeNum, setIndicateMode] = useState(0);
@@ -16,16 +17,16 @@ export default function Home() {
   const [hiddenNums, setHiddenNums] = useState([] as number[]);
   const indicateModes = ['順次', '一覧'];
 
-  const getNumList = (): number[] => {
-    const nums = [...Array(range.max - range.min + 1)].map((_, i) => { return Number(i) + Number(range.min) });
+  const getNumList = useMemo((): number[] => {
+    const nums = [...Array(rangeSnap.max - rangeSnap.min + 1)].map((_, i) => { return Number(i) + Number(rangeSnap.min) });
     const ret = nums.filter((num, i) =>
       hiddenNums.indexOf(num) == -1
     );
     return ret;
-  }
+  }, [hiddenNums, rangeSnap.max, rangeSnap.min]);
 
   const next = () => {
-    const numsList = getNumList();
+    const numsList = getNumList;
     const noneSelectedList = numsList.filter(i => selectedNums.indexOf(i) == -1);
     if (noneSelectedList.length > 0) {
       const selectNum = noneSelectedList[Math.floor(Math.random() * noneSelectedList.length)];
@@ -40,11 +41,13 @@ export default function Home() {
   };
 
   const changeMin = (e: { target: { value: any; }; }) => {
-    setRange({ min: e.target.value, max: range.max });
+    const min = e.target.value == "" ? e.target.value : Math.floor(e.target.value);
+    setRange({ min: min, max: range.max });
   }
 
   const changeMax = (e: { target: { value: any; }; }) => {
-    setRange({ min: range.min, max: e.target.value });
+    const max = e.target.value == "" ? e.target.value : Math.floor(e.target.value);
+    setRange({ min: range.min, max: max });
   }
 
   const changeHiddenInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,7 +71,7 @@ export default function Home() {
         const range = str.split('~');
         if (range.length != 2 || Number(range[0]) >= Number(range[1])) {
           setErrorMessage('範囲が正しくありません');
-          console.log('error',errorMessage);
+          console.log('error', errorMessage);
           return;
         }
         for (let n = Number(range[0]); n <= Number(range[1]); n++) {
@@ -78,7 +81,7 @@ export default function Home() {
         const n = Number(str);
         if (typeof (n) !== 'number') {
           setErrorMessage('なにかがおかしいです');
-          console.log('error',errorMessage);
+          console.log('error', errorMessage);
           return;
         }
         hiddenList.push(n);
@@ -97,13 +100,25 @@ export default function Home() {
   }
 
   const switchOpenDialog = () => {
-    if (openDialog && range.min > range.max) {
-      setErrorMessage('最小値と最大値が逆です');
-    } else if (openDialog && range.min == range.max) {
+    if (!openDialog) {
+      setOpenDialog(true);
+      return;
+    }
+
+    if (range.min.toString.length == 0 || range.max.toString.length == 0) {
+      setErrorMessage('空白は指定できません');
+    } else if (range.min > range.max) {
+      setErrorMessage('最小値と最大値が反対です');
+    } else if (range.min == range.max) {
       setErrorMessage('最小値と最大値が同じです');
+    } else if (range.min < 0) {
+      setErrorMessage('0~999の範囲内で指定してください');
+    } else if (range.max >= 1000) {
+      setErrorMessage('0~999の範囲内で指定してください');
     } else {
+      setRangeSnap({ min: range.min, max: range.max });
       setErrorMessage('');
-      setOpenDialog(!openDialog);
+      setOpenDialog(false);
     }
   }
 
@@ -194,7 +209,7 @@ export default function Home() {
               ? <span key={i} className={styles.selected_num}>{num}</span>
               : <span key={i} className={`${styles.selected_num} ${styles.active}`}>{num}</span>
           })}
-          {indicateModeNum == 1 && getNumList().map((num, i) => {
+          {indicateModeNum == 1 && getNumList.map((num, i) => {
             return selectedNums.indexOf(num) == - 1
               ? <span key={i} className={styles.selected_num}>{num}</span>
               : <span key={i} className={`${styles.selected_num} ${styles.active}`}>{num}</span>
